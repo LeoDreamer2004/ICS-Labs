@@ -1,0 +1,75 @@
+# name: 原梓轩
+# ID: 2200010825@stu.pku.edu.cn
+
+# Execution begins at address 0 
+	.pos 0 
+	irmovq stack, %rsp  	# Set up stack pointer  
+	call main		# Execute main program
+	halt			# Terminate program 
+
+# Array of 4 elements
+.align 8
+Array:
+	.quad 0xbca
+	.quad 0xcba
+	.quad 0xacb
+	.quad 0xcab
+	.quad 0xabc
+	.quad 0xbac
+
+main:	
+	irmovq Array, %rdi
+	irmovq $6, %rsi
+	call bubble_sort
+	ret 
+
+# void bubble_sort(long *data, long count)
+# data in %rdi, count in %rsi
+bubble_sort:
+	rrmovq %rdi, %rdx # %rdx = data
+	rrmovq %rdx, %rax # %rax = data
+	rrmovq %rsi, %rcx # %rcx = count
+	irmovq $8, %r9 # %r9 = 8
+	addq %rcx, %rcx # %rcx = count * 2
+	addq %rcx, %rcx # %rcx = count * 4
+	addq %rcx, %rcx # %rcx = count * 8
+	addq %rcx, %rdx # %rdx = data + count * 8
+	subq %r9, %rdx # %rdx = last = data + count * 8 - 8
+	jmp final
+
+loop:
+	rrmovq %rax, %r10 # %r10 = i
+	jmp i_final
+
+i_loop:
+	rrmovq %r10, %r11 # %r11 = i
+	addq %r9, %r11 # %r11 = i + 1
+	mrmovq (%r10), %r12 # %r12 = data[i]
+	mrmovq (%r11), %r13 # %r13 = data[i + 1]
+	rrmovq %r12, %r14
+	subq %r13, %r14 # %r14 = data[i] - data[i + 1]
+	jle after_loop
+	mrmovq (%r10), %r14 # %r14 = data[i]
+	rmmovq %r13, (%r10) # data[i] = data[i + 1]
+	rmmovq %r14, (%r11) # data[i + 1] = data[i]
+
+after_loop:
+	addq %r9, %r10 # %r10 = i + 1
+	jmp i_final
+
+i_final:
+	rrmovq %rdx, %r11
+	subq %r10, %r11 # %r11 = last - i
+	jg i_loop
+	subq %r9, %rdx # %rdx = last - 1
+	jmp final
+
+final:
+	rrmovq %rax, %r10
+	subq %rdx, %r10 # %r10 = data - last
+	jl loop
+	ret
+	
+# The stack starts here and grows to lower addresses
+	.pos 0x600		
+stack:	 

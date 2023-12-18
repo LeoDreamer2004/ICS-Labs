@@ -1,0 +1,72 @@
+                            | # Execution begins at address 0 
+0x000:                      | 	.pos 0 
+0x000: 30f40006000000000000 | 	irmovq stack, %rsp  	# Set up stack pointer  
+0x00a: 804800000000000000   | 	call main		# Execute main program
+0x013: 00                   | 	halt			# Terminate program 
+                            | 
+                            | # Array of 4 elements
+0x018:                      | .align 8
+0x018:                      | Array:
+0x018: ca0b000000000000     | 	.quad 0xbca
+0x020: ba0c000000000000     | 	.quad 0xcba
+0x028: cb0a000000000000     | 	.quad 0xacb
+0x030: ab0c000000000000     | 	.quad 0xcab
+0x038: bc0a000000000000     | 	.quad 0xabc
+0x040: ac0b000000000000     | 	.quad 0xbac
+                            | 
+0x048:                      | main:	
+0x048: 30f71800000000000000 | 	irmovq Array, %rdi
+0x052: 30f60600000000000000 | 	irmovq $6, %rsi
+0x05c: 806600000000000000   | 	call bubble_sort
+0x065: 90                   | 	ret 
+                            | 
+                            | // void bubble_sort(long *data, long count)
+                            | // data in %rdi, count in %rsi
+0x066:                      | bubble_sort:
+0x066: 2072                 | 	rrmovq %rdi, %rdx // %rdx = data
+0x068: 2020                 | 	rrmovq %rdx, %rax // %rax = data
+0x06a: 2061                 | 	rrmovq %rsi, %rcx // %rcx = count
+0x06c: 30f90800000000000000 | 	irmovq $8, %r9 // %r9 = 8
+0x076: 6011                 | 	addq %rcx, %rcx // %rcx = count * 2
+0x078: 6011                 | 	addq %rcx, %rcx // %rcx = count * 4
+0x07a: 6011                 | 	addq %rcx, %rcx // %rcx = count * 8
+0x07c: 6012                 | 	addq %rcx, %rdx // %rdx = data + count * 8
+0x07e: 6192                 | 	subq %r9, %rdx // %rdx = last = data + count * 8 - 8
+0x080: 70fa00000000000000   | 	jmp final
+                            | 
+0x089:                      | loop:
+0x089: 200a                 | 	rrmovq %rax, %r10 // %r10 = i
+0x08b: 70e200000000000000   | 	jmp i_final
+                            | 
+0x094:                      | i_loop:
+0x094: 20ab                 | 	rrmovq %r10, %r11 // %r11 = i
+0x096: 609b                 | 	addq %r9, %r11 // %r11 = i + 1
+0x098: 50ca0000000000000000 | 	mrmovq (%r10), %r12 // %r12 = data[i]
+0x0a2: 50db0000000000000000 | 	mrmovq (%r11), %r13 // %r13 = data[i + 1]
+0x0ac: 20ce                 | 	rrmovq %r12, %r14
+0x0ae: 61de                 | 	subq %r13, %r14 // %r14 = data[i] - data[i + 1]
+0x0b0: 71d700000000000000   | 	jle after_loop
+0x0b9: 50ea0000000000000000 | 	mrmovq (%r10), %r14 // %r14 = data[i]
+0x0c3: 40da0000000000000000 | 	rmmovq %r13, (%r10) // data[i] = data[i + 1]
+0x0cd: 40eb0000000000000000 | 	rmmovq %r14, (%r11) // data[i + 1] = data[i]
+                            | 
+0x0d7:                      | after_loop:
+0x0d7: 609a                 | 	addq %r9, %r10 // %r10 = i + 1
+0x0d9: 70e200000000000000   | 	jmp i_final
+                            | 
+0x0e2:                      | i_final:
+0x0e2: 202b                 | 	rrmovq %rdx, %r11
+0x0e4: 61ab                 | 	subq %r10, %r11 // %r11 = last - i
+0x0e6: 769400000000000000   | 	jg i_loop
+0x0ef: 6192                 | 	subq %r9, %rdx // %rdx = last - 1
+0x0f1: 70fa00000000000000   | 	jmp final
+                            | 
+0x0fa:                      | final:
+0x0fa: 200a                 | 	rrmovq %rax, %r10
+0x0fc: 612a                 | 	subq %rdx, %r10 // %r10 = data - last
+0x0fe: 728900000000000000   | 	jl loop
+0x107: 90                   | 	ret
+                            | 	
+                            | # The stack starts here and grows to lower addresses
+0x600:                      | 	.pos 0x600		
+0x600:                      | stack:	 
